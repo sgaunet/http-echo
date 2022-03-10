@@ -1,6 +1,6 @@
 version: '3.2'
 services:
     echo:
-        image: sgaunet/http-echo:latest
+        image: sgaunet/http-echo:v0.1.0
         ports:
             - 8080:8080
