@@ -1,3 +1,10 @@
+[![GitHub release](https://img.shields.io/github/release/sgaunet/http-echo.svg)](https://github.com/sgaunet/http-echo/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sgaunet/http-echo)](https://goreportcard.com/report/github.com/sgaunet/http-echo)
+![GitHub Downloads](https://img.shields.io/github/downloads/sgaunet/http-echo/total)
+[![Maintainability](https://api.codeclimate.com/v1/badges/82203a820d424b9b12e9/maintainability)](https://codeclimate.com/github/sgaunet/http-echo/maintainability)
+[![GoDoc](https://godoc.org/github.com/sgaunet/http-echo?status.svg)](https://godoc.org/github.com/sgaunet/http-echo)
+[![License](https://img.shields.io/github/license/sgaunet/http-echo.svg)](LICENSE)
+
 # http-echo
 
 Just a webserver that prints miscellaneous informations about the http request. It can be used to play with docker and kubernetes.
