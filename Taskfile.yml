@@ -5,10 +5,15 @@ vars:
 
 tasks:
   default:
+    desc: "List all tasks"
     cmds:
-      - go get
+      - task -a
+
+  build:
+    desc: "Build the binary"
+    cmds:
+      - go mod download
       - CGO_ENABLED=0 go build .
-      - upx ./{{.BINFILE}}
     # silent: true
     sources:
       - http-echo.go
@@ -18,15 +23,18 @@ tasks:
       - "{{.BINFILE}}"
 
   run:
+    desc: "Run the binary"
     deps: 
-      - default
+      - build
     cmds:
       - ./{{.BINFILE}}
 
   snapshot:
+    desc: "Create a snapshot release"
     cmds:
       - GITLAB_TOKEN="" goreleaser --clean --snapshot
     
   release:
+    desc: "Create a release"
     cmds:
       - GITLAB_TOKEN="" goreleaser --clean
