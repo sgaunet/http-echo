@@ -14,13 +14,11 @@ tasks:
     cmds:
       - go mod download
       - CGO_ENABLED=0 go build .
-    # silent: true
-    sources:
-      - http-echo.go
-      - go*
-    method: checksum
-    generates:
-      - "{{.BINFILE}}"
+
+  linter:
+    desc: "Run linters"
+    cmds:
+      - golangci-lint run
 
   run:
     desc: "Run the binary"
@@ -37,4 +35,4 @@ tasks:
   release:
     desc: "Create a release"
     cmds:
-      - GITLAB_TOKEN="" goreleaser --clean
+      - GITLAB_TOKEN="" goreleaser --clean --skip validate
