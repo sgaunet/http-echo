@@ -1,7 +1,11 @@
 [![GitHub release](https://img.shields.io/github/release/sgaunet/http-echo.svg)](https://github.com/sgaunet/http-echo/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sgaunet/http-echo)](https://goreportcard.com/report/github.com/sgaunet/http-echo)
 ![GitHub Downloads](https://img.shields.io/github/downloads/sgaunet/http-echo/total)
-[![Maintainability](https://api.codeclimate.com/v1/badges/82203a820d424b9b12e9/maintainability)](https://codeclimate.com/github/sgaunet/http-echo/maintainability)
+![Coverage Badge](https://raw.githubusercontent.com/wiki/sgaunet/http-echo/coverage-badge.svg)
+[![linter](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml/badge.svg)](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml)
+[![coverage](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml/badge.svg)](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml)
+[![Snapshot Build](https://github.com/sgaunet/http-echo/actions/workflows/snapshot.yml/badge.svg)](https://github.com/sgaunet/http-echo/actions/workflows/snapshot.yml)
+[![Release Build](https://github.com/sgaunet/http-echo/actions/workflows/release.yml/badge.svg)](https://github.com/sgaunet/http-echo/actions/workflows/release.yml)
 [![GoDoc](https://godoc.org/github.com/sgaunet/http-echo?status.svg)](https://godoc.org/github.com/sgaunet/http-echo)
 [![License](https://img.shields.io/github/license/sgaunet/http-echo.svg)](LICENSE)
 
@@ -40,3 +44,42 @@ Proto: HTTP/1.1
 Remote Addr: 172.18.0.1:43454
 Hostname: 633b9fd87484
 ```
+
+## Project Status
+
+🟨 **Maintenance Mode**: This project is in maintenance mode.
+
+While we are committed to keeping the project's dependencies up-to-date and secure, please note the following:
+
+- New features are unlikely to be added
+- Bug fixes will be addressed, but not necessarily promptly
+- Security updates will be prioritized
+
+## Issues and Bug Reports
+
+We still encourage you to use our issue tracker for:
+
+- 🐛 Reporting critical bugs
+- 🔒 Reporting security vulnerabilities
+- 🔍 Asking questions about the project
+
+Please check existing issues before creating a new one to avoid duplicates.
+
+## Contributions
+
+🤝 Limited contributions are still welcome.
+
+While we're not actively developing new features, we appreciate contributions that:
+
+- Fix bugs
+- Update dependencies
+- Improve documentation
+- Enhance performance or security
+
+If you're interested in contributing, please read our [CONTRIBUTING.md](link-to-contributing-file) guide for more information on how to get started.
+
+## Support
+
+As this project is in maintenance mode, support may be limited. We appreciate your understanding and patience.
+
+Thank you for your interest in our project!
