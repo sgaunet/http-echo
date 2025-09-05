@@ -26,7 +26,8 @@ jobs:
           repo: golangci/golangci-lint
           tag: v2.2.2
           cache: enable
-          
+          binaries-location: golangci-lint-2.2.2-linux-amd64
+
       - name: Run linter
         shell: /usr/bin/bash {0}
         run: |
