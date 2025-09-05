@@ -20,11 +20,10 @@ jobs:
         with:
           repo: go-task/task
           # tag: 
-      - name: Install goreleaser
+      - name: Install golangci-lint
         uses: jaxxstorm/action-install-gh-release@v1.12.0
         with:
           repo: golangci/golangci-lint
-          tag: v2.2.2
       - name: Run linter
         shell: /usr/bin/bash {0}
         run: |
