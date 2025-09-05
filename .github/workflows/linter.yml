@@ -5,29 +5,17 @@ on:
   push:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   linter:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
         with:
-          fetch-depth: 0
-      - name: Install Go
-        uses: actions/setup-go@v6
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
         with:
-          go-version: '>=1.24'
-      - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
-        with:
-          enable-cache: true
-          devbox-version: 0.14.0
-
-      - name: Install prerequisites
-        shell: /usr/bin/bash {0}
-        run: |
-          devbox install
-          devbox run linter
+          version: v2.1
