@@ -1,3 +1,3 @@
-.task
-http-echo
-dist
+/.task
+/http-echo
+/dist
