@@ -15,7 +15,7 @@ tasks:
       - go mod download
       - CGO_ENABLED=0 go build .
 
-  linter:
+  lint:
     desc: "Run linters"
     cmds:
       - golangci-lint run
