@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,23 +40,29 @@ type helloWorldhandler struct {
 
 func (h helloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
-	
+
 	// Collect request information
 	info := h.collectRequestInfo(r, startTime)
-	
-	// Set response content type
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	
+
+	// Build response in memory to reduce allocations
+	var sb strings.Builder
+	sb.Grow(initialBufferSize)
+
 	// Print structured output
-	h.printRequestSummary(w, info)
-	h.printURLInfo(w, info)
-	h.printHeaders(w, info)
-	h.printRequestBody(w, info)
-	h.printFormData(w, info)
-	h.printServerInfo(w, info, startTime)
-	
-	_, _ = fmt.Fprintf(w, "\n=== REQUEST COMPLETED ===")
-	_, _ = fmt.Fprintf(w, "\nProcessing Time: %v\n", time.Since(startTime))
+	h.printRequestSummary(&sb, info)
+	h.printURLInfo(&sb, info)
+	h.printHeaders(&sb, info)
+	h.printRequestBody(&sb, info)
+	h.printFormData(&sb, info)
+	h.printServerInfo(&sb, info, startTime)
+
+	_, _ = fmt.Fprintf(&sb, "\n=== REQUEST COMPLETED ===")
+	_, _ = fmt.Fprintf(&sb, "\nProcessing Time: %v\n", time.Since(startTime))
+
+	// Write complete response in a single call
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(sb.Len()))
+	_, _ = io.WriteString(w, sb.String())
 }
 
 func (h helloWorldhandler) collectRequestInfo(r *http.Request, startTime time.Time) requestInfo {
@@ -103,7 +110,7 @@ func (h helloWorldhandler) getRealIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func (h helloWorldhandler) printRequestSummary(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) printRequestSummary(w io.Writer, info requestInfo) {
 	_, _ = fmt.Fprintf(w, "=== REQUEST SUMMARY ===\n")
 	_, _ = fmt.Fprintf(w, "Timestamp: %s\n", info.StartTime.UTC().Format(time.RFC3339))
 	_, _ = fmt.Fprintf(w, "Method: %s | Protocol: HTTP/1.1 | Host: %s\n", info.Method, info.Host)
@@ -120,7 +127,7 @@ func (h helloWorldhandler) printRequestSummary(w http.ResponseWriter, info reque
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) printURLInfo(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) printURLInfo(w io.Writer, info requestInfo) {
 	_, _ = fmt.Fprintf(w, "=== URL INFORMATION ===\n")
 	_, _ = fmt.Fprintf(w, "Path: %s\n", info.URL)
 	
@@ -137,7 +144,7 @@ func (h helloWorldhandler) printURLInfo(w http.ResponseWriter, info requestInfo)
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) printHeaders(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) printHeaders(w io.Writer, info requestInfo) {
 	_, _ = fmt.Fprintf(w, "=== REQUEST HEADERS ===\n")
 	
 	// Highlight important headers first
@@ -157,7 +164,7 @@ func (h helloWorldhandler) printHeaders(w http.ResponseWriter, info requestInfo)
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) printRequestBody(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) printRequestBody(w io.Writer, info requestInfo) {
 	_, _ = fmt.Fprintf(w, "=== REQUEST BODY ===\n")
 	_, _ = fmt.Fprintf(w, "Content-Length: %d bytes\n", info.ContentLength)
 	_, _ = fmt.Fprintf(w, "Content-Type: %s\n", info.ContentType)
@@ -172,7 +179,7 @@ func (h helloWorldhandler) printRequestBody(w http.ResponseWriter, info requestI
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) printFormData(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) printFormData(w io.Writer, info requestInfo) {
 	_, _ = fmt.Fprintf(w, "=== FORM DATA ===\n")
 	
 	if len(info.FormData) > 0 {
@@ -197,7 +204,7 @@ func (h helloWorldhandler) printFormData(w http.ResponseWriter, info requestInfo
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) printServerInfo(w http.ResponseWriter, _ requestInfo, startTime time.Time) {
+func (h helloWorldhandler) printServerInfo(w io.Writer, _ requestInfo, startTime time.Time) {
 	_, _ = fmt.Fprintf(w, "=== SERVER INFORMATION ===\n")
 	
 	// Hostname
@@ -221,10 +228,10 @@ func (h helloWorldhandler) printServerInfo(w http.ResponseWriter, _ requestInfo,
 	_, _ = fmt.Fprintf(w, "\n")
 }
 
-func (h helloWorldhandler) formatBodyContent(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) formatBodyContent(w io.Writer, info requestInfo) {
 	// Try to format JSON if it looks like JSON
 	if strings.Contains(strings.ToLower(info.ContentType), "json") {
-		var jsonData interface{}
+		var jsonData any
 		if err := json.Unmarshal(info.Body, &jsonData); err == nil {
 			if formatted, err := json.MarshalIndent(jsonData, "", "  "); err == nil {
 				_, _ = fmt.Fprintf(w, "%s\n", string(formatted))
@@ -235,7 +242,7 @@ func (h helloWorldhandler) formatBodyContent(w http.ResponseWriter, info request
 	_, _ = fmt.Fprintf(w, "%s\n", string(info.Body))
 }
 
-func (h helloWorldhandler) parseBodyAsForm(w http.ResponseWriter, info requestInfo) {
+func (h helloWorldhandler) parseBodyAsForm(w io.Writer, info requestInfo) {
 	// Try to parse as form data if it looks like form data
 	if parsedValues, err := url.ParseQuery(string(info.Body)); err == nil && len(parsedValues) > 0 {
 		_, _ = fmt.Fprintf(w, "\nParsed as form data:\n")
@@ -248,11 +255,12 @@ func (h helloWorldhandler) parseBodyAsForm(w http.ResponseWriter, info requestIn
 }
 
 const (
-	readTimeout     = 10 * time.Second
-	writeTimeout    = 10 * time.Second
-	idleTimeout     = 60 * time.Second
-	maxHeaderBytes  = 1 << 20
-	shutdownTimeout = 5 * time.Second
+	initialBufferSize = 2048
+	readTimeout       = 10 * time.Second
+	writeTimeout      = 10 * time.Second
+	idleTimeout       = 60 * time.Second
+	maxHeaderBytes    = 1 << 20
+	shutdownTimeout   = 5 * time.Second
 )
 
 func main() {
