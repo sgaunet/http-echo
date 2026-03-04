@@ -43,6 +43,9 @@ type helloWorldhandler struct {
 func (h helloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
+	// Limit request body size to prevent memory exhaustion from large bodies or forms
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+
 	// Collect request information
 	info := h.collectRequestInfo(r, startTime)
 
@@ -73,8 +76,8 @@ func (h helloWorldhandler) collectRequestInfo(r *http.Request, startTime time.Ti
 	// Parse form data
 	_ = r.ParseForm()
 	
-	// Read body with size limit to prevent memory exhaustion
-	body, _ := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	// Read body (size already limited by MaxBytesReader in ServeHTTP)
+	body, _ := io.ReadAll(r.Body)
 	
 	// Get real IP
 	realIP := h.getRealIP(r)
