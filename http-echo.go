@@ -217,7 +217,7 @@ func (h helloWorldhandler) printServerInfo(w io.Writer, _ requestInfo, startTime
 	_, _ = fmt.Fprintf(w, "Server OS: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	
 	// Environment variables (container/k8s info)
-	envVars := []string{"HOSTNAME", "POD_NAME", "POD_NAMESPACE", "CONTAINER_NAME"}
+	envVars := []string{"HOSTNAME", "POD_NAME", "POD_NAMESPACE"}
 	for _, envVar := range envVars {
 		if value := os.Getenv(envVar); value != "" {
 			_, _ = fmt.Fprintf(w, "%s: %s\n", envVar, value)
