@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestServeHTTP_BasicRequest(t *testing.T) {
@@ -200,6 +201,50 @@ func TestGetRealIP_Fallback(t *testing.T) {
 	got := handler.getRealIP(req)
 	if got != "192.168.1.1:5678" {
 		t.Errorf("getRealIP() = %q, want %q", got, "192.168.1.1:5678")
+	}
+}
+
+func TestNewServer_Timeouts(t *testing.T) {
+	srv := newServer()
+
+	tests := []struct {
+		name string
+		got  time.Duration
+		want time.Duration
+	}{
+		{"ReadTimeout", srv.ReadTimeout, readTimeout},
+		{"ReadHeaderTimeout", srv.ReadHeaderTimeout, readHeaderTimeout},
+		{"WriteTimeout", srv.WriteTimeout, writeTimeout},
+		{"IdleTimeout", srv.IdleTimeout, idleTimeout},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.got != tt.want {
+				t.Errorf("%s = %v, want %v", tt.name, tt.got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewServer_ReadHeaderTimeoutLessThanReadTimeout(t *testing.T) {
+	srv := newServer()
+	if srv.ReadHeaderTimeout >= srv.ReadTimeout {
+		t.Errorf("ReadHeaderTimeout (%v) should be less than ReadTimeout (%v)",
+			srv.ReadHeaderTimeout, srv.ReadTimeout)
+	}
+}
+
+func TestNewServer_Addr(t *testing.T) {
+	srv := newServer()
+	if srv.Addr != ":8080" {
+		t.Errorf("Addr = %q, want %q", srv.Addr, ":8080")
+	}
+}
+
+func TestNewServer_MaxHeaderBytes(t *testing.T) {
+	srv := newServer()
+	if srv.MaxHeaderBytes != maxHeaderBytes {
+		t.Errorf("MaxHeaderBytes = %d, want %d", srv.MaxHeaderBytes, maxHeaderBytes)
 	}
 }
 
