@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -282,14 +284,22 @@ func newServer() *http.Server {
 func main() {
 	server := newServer()
 
-	log.Println("Starting server on :8080")
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Could not start server: %s\n", err.Error())
-	}
+	go func() {
+		log.Println("Starting server on :8080")
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Could not start server: %s\n", err.Error())
+		}
+	}()
 
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutdown signal received, shutting down gracefully...")
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Server shutdown error: %s\n", err.Error())
 	}
+	log.Println("Server stopped")
 }
