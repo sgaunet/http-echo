@@ -73,8 +73,8 @@ func (h helloWorldhandler) collectRequestInfo(r *http.Request, startTime time.Ti
 	// Parse form data
 	_ = r.ParseForm()
 	
-	// Read body
-	body, _ := io.ReadAll(r.Body)
+	// Read body with size limit to prevent memory exhaustion
+	body, _ := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	
 	// Get real IP
 	realIP := h.getRealIP(r)
@@ -265,6 +265,7 @@ const (
 	writeTimeout       = 10 * time.Second
 	idleTimeout       = 60 * time.Second
 	maxHeaderBytes    = 1 << 20
+	maxBodySize       = 10 << 20 // 10MB
 	shutdownTimeout   = 5 * time.Second
 )
 
