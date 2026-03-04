@@ -67,17 +67,25 @@ func (h helloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Write complete response in a single call
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Content-Length", strconv.Itoa(sb.Len()))
-	_, _ = io.WriteString(w, sb.String())
+	if _, err := io.WriteString(w, sb.String()); err != nil {
+		log.Printf("error writing response: %v", err)
+	}
 }
 
 func (h helloWorldhandler) collectRequestInfo(r *http.Request, startTime time.Time) requestInfo {
 	defer func() { _ = r.Body.Close() }()
 
 	// Parse form data
-	_ = r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		log.Printf("error parsing form data: %v", err)
+	}
 	
 	// Read body (size already limited by MaxBytesReader in ServeHTTP)
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error reading request body: %v", err)
+		body = []byte("(body read failed)")
+	}
 	
 	// Get real IP
 	realIP := h.getRealIP(r)
