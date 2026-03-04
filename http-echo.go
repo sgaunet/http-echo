@@ -255,24 +255,30 @@ func (h helloWorldhandler) parseBodyAsForm(w io.Writer, info requestInfo) {
 }
 
 const (
-	initialBufferSize = 2048
-	readTimeout       = 10 * time.Second
-	writeTimeout      = 10 * time.Second
+	initialBufferSize  = 2048
+	readTimeout        = 10 * time.Second
+	readHeaderTimeout  = 5 * time.Second
+	writeTimeout       = 10 * time.Second
 	idleTimeout       = 60 * time.Second
 	maxHeaderBytes    = 1 << 20
 	shutdownTimeout   = 5 * time.Second
 )
 
-func main() {
+func newServer() *http.Server {
 	var h helloWorldhandler
-	server := &http.Server{
-		Addr:           ":8080",
-		Handler:        h,
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
-		IdleTimeout:    idleTimeout,
-		MaxHeaderBytes: maxHeaderBytes,
+	return &http.Server{
+		Addr:              ":8080",
+		Handler:           h,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+		MaxHeaderBytes:    maxHeaderBytes,
 	}
+}
+
+func main() {
+	server := newServer()
 
 	log.Println("Starting server on :8080")
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
