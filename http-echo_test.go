@@ -209,7 +209,7 @@ func BenchmarkServeHTTP(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		req := httptest.NewRequest(http.MethodGet, "/test?key=value", nil)
 		req.RemoteAddr = "127.0.0.1:12345"
 		req.Header.Set("X-Custom", "bench")
