@@ -66,6 +66,8 @@ func (h helloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h helloWorldhandler) collectRequestInfo(r *http.Request, startTime time.Time) requestInfo {
+	defer func() { _ = r.Body.Close() }()
+
 	// Parse form data
 	_ = r.ParseForm()
 	
