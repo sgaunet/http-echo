@@ -248,6 +248,252 @@ func TestNewServer_MaxHeaderBytes(t *testing.T) {
 	}
 }
 
+func TestGetRealIP_Priority(t *testing.T) {
+	handler := helloWorldhandler{}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-Forwarded-For", "1.1.1.1")
+	req.Header.Set("X-Real-IP", "2.2.2.2")
+	req.Header.Set("Cf-Connecting-Ip", "3.3.3.3")
+	req.RemoteAddr = "4.4.4.4:1234"
+
+	got := handler.getRealIP(req)
+	if got != "1.1.1.1" {
+		t.Errorf("X-Forwarded-For should take priority, got %q", got)
+	}
+}
+
+func TestFormatBodyContent_JSON(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		ContentType: "application/json",
+		Body:        []byte(`{"b":2,"a":1}`),
+	}
+
+	handler.formatBodyContent(&sb, info)
+	out := sb.String()
+
+	if !strings.Contains(out, `"a": 1`) || !strings.Contains(out, `"b": 2`) {
+		t.Errorf("expected pretty-printed JSON, got %q", out)
+	}
+}
+
+func TestFormatBodyContent_InvalidJSON(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		ContentType: "application/json",
+		Body:        []byte(`{invalid`),
+	}
+
+	handler.formatBodyContent(&sb, info)
+
+	if !strings.Contains(sb.String(), "{invalid") {
+		t.Error("invalid JSON should be output as-is")
+	}
+}
+
+func TestFormatBodyContent_PlainText(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		ContentType: "text/plain",
+		Body:        []byte("hello world"),
+	}
+
+	handler.formatBodyContent(&sb, info)
+
+	if !strings.Contains(sb.String(), "hello world") {
+		t.Error("expected plain text in output")
+	}
+}
+
+func TestParseBodyAsForm(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		Body: []byte("key1=val1&key2=val2"),
+	}
+
+	handler.parseBodyAsForm(&sb, info)
+	out := sb.String()
+
+	if !strings.Contains(out, "Parsed as form data:") {
+		t.Error("expected form data parsing header")
+	}
+	if !strings.Contains(out, "key1 = val1") {
+		t.Error("missing key1 in parsed form data")
+	}
+	if !strings.Contains(out, "key2 = val2") {
+		t.Error("missing key2 in parsed form data")
+	}
+}
+
+func TestParseBodyAsForm_EmptyBody(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		Body: []byte(""),
+	}
+
+	handler.parseBodyAsForm(&sb, info)
+
+	if sb.Len() != 0 {
+		t.Errorf("empty body should produce no output, got %q", sb.String())
+	}
+}
+
+func TestPrintRequestSummary_RealIPShown(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		Method:     "GET",
+		Host:       "localhost:8080",
+		URL:        "/test",
+		RemoteAddr: "127.0.0.1:1234",
+		RealIP:     "10.0.0.1",
+		UserAgent:  "test-agent",
+	}
+
+	handler.printRequestSummary(&sb, info)
+	out := sb.String()
+
+	if !strings.Contains(out, "Real Client IP: 10.0.0.1") {
+		t.Error("should show real IP when different from remote addr")
+	}
+	if !strings.Contains(out, "User Agent: test-agent") {
+		t.Error("missing user agent")
+	}
+}
+
+func TestPrintRequestSummary_RealIPHidden(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		RemoteAddr: "127.0.0.1:1234",
+		RealIP:     "127.0.0.1:1234",
+	}
+
+	handler.printRequestSummary(&sb, info)
+
+	if strings.Contains(sb.String(), "Real Client IP") {
+		t.Error("should not show real IP when same as remote addr")
+	}
+}
+
+func TestPrintURLInfo_NoQueryParams(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{URL: "/simple"}
+
+	handler.printURLInfo(&sb, info)
+
+	if !strings.Contains(sb.String(), "Query Parameters: (none)") {
+		t.Error("should show (none) for empty query params")
+	}
+}
+
+func TestPrintHeaders_ImportantHighlighted(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Authorization", "Bearer token")
+	headers.Set("X-Custom", "value")
+	info := requestInfo{Headers: headers}
+
+	handler.printHeaders(&sb, info)
+	out := sb.String()
+
+	if !strings.Contains(out, "* Content-Type") {
+		t.Error("Content-Type should be highlighted")
+	}
+	if !strings.Contains(out, "* Authorization") {
+		t.Error("Authorization should be highlighted")
+	}
+	if !strings.Contains(out, "X-Custom") {
+		t.Error("missing custom header")
+	}
+}
+
+func TestPrintRequestBody_Empty(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{}
+
+	handler.printRequestBody(&sb, info)
+
+	if !strings.Contains(sb.String(), "Body: (empty)") {
+		t.Error("should show empty body message")
+	}
+}
+
+func TestPrintFormData_Empty(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{}
+
+	handler.printFormData(&sb, info)
+
+	if !strings.Contains(sb.String(), "Form Data: (none)") {
+		t.Error("should show (none) for empty form data")
+	}
+}
+
+func TestPrintFormData_WithPostData(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+	info := requestInfo{
+		FormData:     map[string][]string{"field": {"val"}},
+		PostFormData: map[string][]string{"field": {"val"}},
+	}
+
+	handler.printFormData(&sb, info)
+	out := sb.String()
+
+	if !strings.Contains(out, "Combined Form Data (GET + POST):") {
+		t.Error("missing combined form data section")
+	}
+	if !strings.Contains(out, "POST Form Data Only:") {
+		t.Error("missing POST form data section")
+	}
+}
+
+func TestPrintServerInfo(t *testing.T) {
+	handler := helloWorldhandler{}
+	var sb strings.Builder
+
+	handler.printServerInfo(&sb, requestInfo{}, time.Now())
+	out := sb.String()
+
+	if !strings.Contains(out, "=== SERVER INFORMATION ===") {
+		t.Error("missing section header")
+	}
+	if !strings.Contains(out, "Go Version:") {
+		t.Error("missing Go version")
+	}
+	if !strings.Contains(out, "Server OS:") {
+		t.Error("missing server OS")
+	}
+}
+
+func TestServeHTTP_BodySizeLimit(t *testing.T) {
+	handler := helloWorldhandler{}
+	// Create a body larger than maxBodySize (10MB)
+	largeBody := strings.NewReader(strings.Repeat("x", 11<<20))
+	req := httptest.NewRequest(http.MethodPost, "/", largeBody)
+	req.RemoteAddr = "127.0.0.1:12345"
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	body := rec.Body.String()
+	// The response should still complete (not panic), body should be truncated or show error
+	if !strings.Contains(body, "=== REQUEST COMPLETED ===") {
+		t.Error("response should complete even with oversized body")
+	}
+}
+
 func BenchmarkServeHTTP(b *testing.B) {
 	handler := helloWorldhandler{}
 
