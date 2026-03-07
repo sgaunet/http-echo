@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+var version = "dev"
+
 type requestInfo struct {
 	StartTime    time.Time
 	Method       string
@@ -228,6 +230,7 @@ func (h helloWorldhandler) printServerInfo(w io.Writer, _ requestInfo, startTime
 	}
 	
 	// Runtime info
+	_, _ = fmt.Fprintf(w, "Server Version: %s\n", version)
 	_, _ = fmt.Fprintf(w, "Go Version: %s\n", runtime.Version())
 	_, _ = fmt.Fprintf(w, "Server OS: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	
@@ -297,7 +300,7 @@ func main() {
 	server := newServer()
 
 	go func() {
-		log.Println("Starting server on :8080")
+		log.Printf("Starting server on :8080 (version %s)", version)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Could not start server: %s\n", err.Error())
 		}
