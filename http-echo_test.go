@@ -469,6 +469,9 @@ func TestPrintServerInfo(t *testing.T) {
 	if !strings.Contains(out, "=== SERVER INFORMATION ===") {
 		t.Error("missing section header")
 	}
+	if !strings.Contains(out, "Server Version:") {
+		t.Error("missing server version")
+	}
 	if !strings.Contains(out, "Go Version:") {
 		t.Error("missing Go version")
 	}
