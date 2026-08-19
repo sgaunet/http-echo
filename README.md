@@ -1,5 +1,4 @@
 [![GitHub release](https://img.shields.io/github/release/sgaunet/http-echo.svg)](https://github.com/sgaunet/http-echo/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/sgaunet/http-echo)](https://goreportcard.com/report/github.com/sgaunet/http-echo)
 ![GitHub Downloads](https://img.shields.io/github/downloads/sgaunet/http-echo/total)
 ![Coverage Badge](https://raw.githubusercontent.com/wiki/sgaunet/http-echo/coverage-badge.svg)
 [![linter](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml/badge.svg)](https://github.com/sgaunet/http-echo/actions/workflows/coverage.yml)
