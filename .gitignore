@@ -1,3 +1,4 @@
 /.task
 /http-echo
 /dist
+/govulncheck.sarif
